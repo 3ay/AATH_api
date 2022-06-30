@@ -20,8 +20,6 @@ import java.util.concurrent.TimeoutException;
 @RestController
 @RequestMapping("/agent/command/connection")
 public class ConnectionController {
-    @Autowired
-    private ConfigProperties props;
 
     private final ApiService apiService;
     public ConnectionController(ApiService apiService) {
@@ -45,10 +43,8 @@ public class ConnectionController {
     @RequestMapping(value = "/create-invitation", method = RequestMethod.POST)
     public InvitationResponse postCreateInvitation(@RequestBody InvitationRequest invitationRequest) throws InterruptedException, ExecutionException, TimeoutException {
 
-        ApiService.buidContext(props.getCredentials(), props.getFromVerkey(), props.getFromSigKey(), props.getThierKey(), props.getServerUrl());
-        ApiService.addToContextDic(invitationRequest.getData().agentName, ApiService.getContext());
-        ApiService.setListener(ApiService.getContext());
-        ApiService.addToInvitationDic(invitationRequest.getData().agentName, Connection_160.getInvitation());
+        ApiService.addToContextDic(invitationRequest.getData().connection_id, ApiService.getContext());
+        ApiService.addToInvitationDic(invitationRequest.getData().connection_id, Connection_160.getInvitation());
         return ApiService.getInvitationDic().get(invitationRequest);
     }
     @RequestMapping(value = "/receive-invitation", method = RequestMethod.POST)
@@ -70,8 +66,7 @@ public class ConnectionController {
             throw new ThereIsNoInvitationException("There is no invitation has this id");
         else
         {
-            Context context = ApiService.getContextDic().get(new InvitationRequest(response.getAgent_name()));
-            Connection_160.inviteeRoutine(context);
+            Connection_160.inviteeRoutine(ApiService.getContext());
         }
         return ApiService.getAccept(acceptRequest,"request");
     }
@@ -85,11 +80,6 @@ public class ConnectionController {
                 .orElse(null);
         if (response == null)
             throw new ThereIsNoInvitationException("There is no invitation has this id");
-        else
-        {
-            Context context = ApiService.getContextDic().get(new InvitationRequest(response.getAgent_name()));
-            Connection_160.inviterRoutine(context);
-        }
 
         return ApiService.getAccept(acceptRequest,"response");
     }

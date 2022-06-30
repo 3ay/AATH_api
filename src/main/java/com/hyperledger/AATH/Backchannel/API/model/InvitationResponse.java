@@ -7,19 +7,19 @@ import lombok.Data;
 import java.util.ArrayList;
 @Data
 public class InvitationResponse extends Connection{
-    @JsonProperty("agent_name")
-    private String agent_name;
+    @JsonProperty("connection_id")
+    private String connection_id;
     @JsonProperty("invitation")
     @SerializedName("invitation")
     private InvitationMessage invitation = null;
 
-    public InvitationResponse(String type, String id, String serviceEndpoint, ArrayList<String> recipientKeys, String label, String agent_name) {
+    public InvitationResponse(String type, String id, String serviceEndpoint, ArrayList<String> recipientKeys, String label, String connection_id) {
         setInvitation(new InvitationMessage());
         getInvitation().type = type;
         getInvitation().id = id;
         getInvitation().serviceEndpoint = serviceEndpoint;
         getInvitation().recipientKeys = recipientKeys;
         getInvitation().label = label;
-        this.agent_name = agent_name;
+        this.connection_id = connection_id;
     }
 }

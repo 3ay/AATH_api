@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class InvitationRequestData {
-    @JsonProperty("agentName")
-    public String agentName;
+    @JsonProperty("mediator_connection_id")
+    public String connection_id;
     @JsonProperty("comment")
     public String comment;
 }

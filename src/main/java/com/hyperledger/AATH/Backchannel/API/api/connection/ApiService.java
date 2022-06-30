@@ -1,11 +1,15 @@
 package com.hyperledger.AATH.Backchannel.API.api.connection;
 
 import com.google.gson.Gson;
+import com.hyperledger.AATH.Backchannel.API.BeanInitMethodImpl;
 import com.hyperledger.AATH.Backchannel.API.Exception.ThereIsNoInvitationException;
 import com.hyperledger.AATH.Backchannel.API.model.*;
 import com.hyperledger.AATH.Backchannel.API.sirius.runner.Connection_160;
 import com.hyperledger.AATH.Backchannel.API.sirius.runner.Main;
+import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.Invitation;
+import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Inviter;
+import com.sirius.sdk.agent.listener.Event;
 import com.sirius.sdk.agent.listener.Listener;
 import com.sirius.sdk.agent.pairwise.Pairwise;
 import com.sirius.sdk.encryption.P2PConnection;
@@ -14,19 +18,40 @@ import com.sirius.sdk.hub.Context;
 import com.sirius.sdk.utils.Pair;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import javax.enterprise.event.Observes;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
+import static com.hyperledger.AATH.Backchannel.API.sirius.runner.Connection_160.getEndpoint;
 import static com.hyperledger.AATH.Backchannel.API.sirius.runner.Connection_160.setEndpoint;
 
 @Service
 public class ApiService {
+    private static final Logger log = LoggerFactory.getLogger(ApiService.class);
 
+    @Qualifier("Listener")
+    private ExecutorService executorService;
+    @EventListener
+    public void onStart() {
+        log.info("The KycListener is starting...");
+        executorService.execute(this::Listen);
+    }
+    @EventListener
+    public void onStop() {
+        log.info("The KycListener is stopping...");
+        executorService.shutdownNow();
+    }
     public static InvitationMessage InvitationMessageToModel(Invitation invitation) {
         String json = invitation.getMessageObj().toString();
         Gson gson = new Gson();
@@ -116,7 +141,7 @@ public class ApiService {
                     response.getInvitation().getServiceEndpoint(),
                     response.getInvitation().getRecipientKeys(),
                     response.getInvitation().getLabel(),
-                    response.getAgent_name()));
+                    response.getConnection_id()));
         }
         else
         {
@@ -160,10 +185,36 @@ public class ApiService {
 
         for (int i = 0; i <keysLst.size(); i++) {
             lst.add(new ConnectionResponse(valuesLst.get(i).getInvitation().getId(),
-                    keysLst.get(i).getData().getAgentName(),valuesLst.get(i).getInvitation()));
+                    keysLst.get(i).getData().getConnection_id(),valuesLst.get(i).getInvitation()));
         }
 
         ConnectionResponse.setLst(lst);
         return lst;
+    }
+    public void Listen(){
+        try {
+            setEndpoint(ApiService.getContext());
+            Pair<String, String> didVerkey = ApiService.getContext().getDid().createAndStoreMyDid();
+            Pairwise.Me inviterMe = new Pairwise.Me(didVerkey.first, didVerkey.second);
+            Listener listener = ApiService.getContext().subscribe(); //??
+            while (true) {
+                Event event = listener.getOne().get();//.get(30, TimeUnit.SECONDS);
+                String expectedKey = Connection_160.getConnectionKey();
+                String actualKey = event.getRecipientVerkey();
+                if (expectedKey.equals(actualKey)) { //getConnectionKey().equals(event.getRecipientVerkey())
+                    if (event.message() instanceof ConnRequest) {
+                        ConnRequest request = (ConnRequest) event.message();
+                        Inviter inviter_machine = new Inviter(ApiService.getContext(), inviterMe, expectedKey, getEndpoint());
+                        Connection_160.setInviter(inviter_machine);
+                        Pairwise pairwise = inviter_machine.createConnection(request);
+                        ApiService.getContext().getPairwiseList().ensureExists(pairwise);
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            log.info("Stop listener");
+        }
     }
 }

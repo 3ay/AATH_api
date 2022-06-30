@@ -8,10 +8,10 @@ import com.google.gson.annotations.SerializedName;
 public class InvitationRequest {
     @JsonProperty("data")
     public InvitationRequestData data;
-    public InvitationRequest(String  agentName)
+    public InvitationRequest(String  connection_id)
     {
         setData(new InvitationRequestData());
-        getData().agentName = agentName;
+        getData().connection_id = connection_id;
     }
 
     public InvitationRequest() {
