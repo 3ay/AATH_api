@@ -1,4 +1,4 @@
-package com.hyperledger.AATH.Backchannel.API.sirius.runner;
+package Example160ProtocolRunner;
 
 import com.sirius.sdk.encryption.P2PConnection;
 import com.sirius.sdk.hub.CloudContext;

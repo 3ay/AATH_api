@@ -1,18 +1,11 @@
-package com.hyperledger.AATH.Backchannel.API.sirius.runner;
+package Example160ProtocolRunner;
 
-import com.sirius.sdk.agent.listener.Event;
-import com.sirius.sdk.agent.listener.Listener;
-import com.sirius.sdk.agent.aries_rfc.feature_0095_basic_message.Message;
-import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Inviter;
-import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.Invitation;
 import com.sirius.sdk.agent.connections.Endpoint;
-import com.sirius.sdk.agent.pairwise.Pairwise;
 import com.sirius.sdk.agent.wallet.abstract_wallet.model.RetrieveRecordOptions;
 import com.sirius.sdk.encryption.P2PConnection;
 import com.sirius.sdk.hub.CloudContext;
 import com.sirius.sdk.hub.Context;
-import com.sirius.sdk.hub.CloudHub;
 import com.sirius.sdk.utils.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,7 +14,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;

@@ -1,8 +1,4 @@
-package com.hyperledger.AATH.Backchannel.API.sirius.runner;
-import com.hyperledger.AATH.Backchannel.API.api.connection.ApiService;
-import com.hyperledger.AATH.Backchannel.API.model.InvitationMessage;
-import com.hyperledger.AATH.Backchannel.API.model.InvitationRequest;
-import com.hyperledger.AATH.Backchannel.API.model.InvitationResponse;
+package Example160ProtocolRunner;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.Invitation;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Invitee;
@@ -16,7 +12,6 @@ import com.sirius.sdk.utils.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

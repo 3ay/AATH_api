@@ -1,4 +1,4 @@
-package com.hyperledger.AATH.Backchannel.API.model;
+package com.sirius.aath.backchannel.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
@@ -27,4 +27,11 @@ public class InvitationMessage {
     @SerializedName ("label")
     public String label = null;
 
+    public InvitationMessage(String type, String id, String serviceEndpoint, ArrayList<String> recipientKeys, String label) {
+        this.type = type;
+        this.id = id;
+        this.serviceEndpoint = serviceEndpoint;
+        this.recipientKeys = recipientKeys;
+        this.label = label;
+    }
 }
