@@ -1,6 +1,7 @@
 package com.sirius.aath.backchannel;
 
 import com.sirius.aath.backchannel.event.ConnectionRequestEvent;
+import com.sirius.sdk.agent.aries_rfc.feature_0015_acks.Ack;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
 import com.sirius.sdk.agent.listener.Event;
 import com.sirius.sdk.agent.listener.Listener;
@@ -57,6 +58,8 @@ public class SdkListener {
                 log.info("received: {}", message.getMessageObj());
                 if (message instanceof ConnRequest) {
                     publisher.publishEvent(new ConnectionRequestEvent((ConnRequest) message, "metadata"));
+                } else if (message instanceof Ack) {
+                    publisher.publishEvent(message);
                 }
             }
         } catch (ExecutionException e) {
