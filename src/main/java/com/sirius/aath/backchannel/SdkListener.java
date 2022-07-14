@@ -2,6 +2,7 @@ package com.sirius.aath.backchannel;
 
 import com.sirius.aath.backchannel.event.ConnectionRequestEvent;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
+import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Inviter;
 import com.sirius.sdk.agent.listener.Event;
 import com.sirius.sdk.agent.listener.Listener;
 import com.sirius.sdk.hub.Context;

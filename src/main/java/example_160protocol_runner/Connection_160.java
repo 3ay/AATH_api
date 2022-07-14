@@ -1,4 +1,4 @@
-package Example160ProtocolRunner;
+package example_160protocol_runner;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.ConnRequest;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.Invitation;
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Invitee;
@@ -80,6 +80,7 @@ public class Connection_160 {
         Pair<String,String> didVerkey = context.getDid().createAndStoreMyDid();
         Pairwise.Me inviterMe = new Pairwise.Me(didVerkey.first, didVerkey.second);
         Listener listener = context.subscribe(); //??
+        //context.sendTo(new Message("new mess"),new Pairwise());
         Event event = listener.getOne().get(30, TimeUnit.SECONDS);
         String expectedKey = Connection_160.getConnectionKey();
         String actualKey = event.getRecipientVerkey();

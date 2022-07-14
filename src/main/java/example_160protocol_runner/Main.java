@@ -1,4 +1,4 @@
-package Example160ProtocolRunner;
+package example_160protocol_runner;
 
 import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.messages.Invitation;
 import com.sirius.sdk.agent.connections.Endpoint;

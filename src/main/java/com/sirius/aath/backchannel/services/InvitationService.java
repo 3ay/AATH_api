@@ -1,4 +1,4 @@
-package com.sirius.aath.backchannel;
+package com.sirius.aath.backchannel.services;
 
 import com.google.gson.Gson;
 import com.sirius.aath.backchannel.exception.ThereIsNoInvitationException;
@@ -15,18 +15,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 @Service
-public class ApiService {
+public class InvitationService {
+    private final ConnectionService connectionService;
     static Endpoint endpoint;
 
     static Invitation invitation;
 
     static String  connectionKey;
+
+    public InvitationService(ConnectionService connectionService) {
+        this.connectionService = connectionService;
+    }
+
     public String getConnectionKey() {
         return connectionKey;
     }
 
     public void setConnectionKey(String connectionKey) {
-        ApiService.connectionKey = connectionKey;
+        InvitationService.connectionKey = connectionKey;
     }
     public Invitation getInvitation() {
         return invitation;
@@ -99,15 +105,7 @@ public class ApiService {
         return response;
     }
 
-    public ArrayList<ConnectionResponse> getLst() {
-        return lst;
-    }
 
-    public void setLst(ArrayList<ConnectionResponse> lst) {
-        this.lst = lst;
-    }
-
-    private static ArrayList<ConnectionResponse> lst = new ArrayList<ConnectionResponse>();
     public static InvitationMessage InvitationMessageToModel(Invitation invitation) {
         String json = invitation.getMessageObj().toString();
         Gson gson = new Gson();
@@ -119,7 +117,7 @@ public class ApiService {
     }
 
     public static void setInvitation_data(String invitation_data) {
-        ApiService.invitation_data = invitation_data;
+        InvitationService.invitation_data = invitation_data;
     }
 
     public ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> getInvitationDic() {
@@ -127,7 +125,7 @@ public class ApiService {
     }
 
     public void setInvitationDic(ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationDic) {
-        ApiService.invitationDic = invitationDic;
+        InvitationService.invitationDic = invitationDic;
     }
 
     private static ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationDic = new ConcurrentHashMap();
@@ -137,7 +135,7 @@ public class ApiService {
     }
 
     public void setContextDic(ConcurrentHashMap<ConnectionCreateInvitationRequest, Context> contextDic) {
-        ApiService.contextDic = contextDic;
+        InvitationService.contextDic = contextDic;
     }
 
     private static ConcurrentHashMap<ConnectionCreateInvitationRequest, Context> contextDic = new ConcurrentHashMap<>();
@@ -176,7 +174,7 @@ public class ApiService {
     {
         ConnectionAcceptInvitation200Response acceptInvitationResponse = new ConnectionAcceptInvitation200Response();
         String connectionId = "";
-        ConnectionResponse response = getLst().stream()
+        ConnectionResponse response = connectionService.getLst().stream()
                 .filter(el -> request.getId().equals(el.getConnectionId()))
                 .findAny()
                 .orElse(null);
@@ -194,7 +192,7 @@ public class ApiService {
     {
         ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> map =
                 new ConcurrentHashMap<>();
-        InvitationMessage object = ApiService.InvitationMessageToModel(invitation);
+        InvitationMessage object = InvitationService.InvitationMessageToModel(invitation);
         map.put(invitationRequest(id),new InvitationMessage(
                 object.type,
                 object.id,
@@ -205,19 +203,5 @@ public class ApiService {
     }
     private static String invitation_data;
 
-    public ArrayList<ConnectionResponse> list() throws InterruptedException, ExecutionException, TimeoutException {
-        ArrayList<ConnectionResponse> lst = new ArrayList<ConnectionResponse>();
-        //создать два списка, один с ключами, другой с values внести последовательно в объект новго списка по сущностям
-        ArrayList<InvitationMessage> valuesLst = new ArrayList<>(getInvitationDic().values());
-       ArrayList <ConnectionCreateInvitationRequest> keysLst = new ArrayList<>(getInvitationDic().keySet());
-        ConnectionResponse connectionResponse = new ConnectionResponse();
-        for (int i = 0; i <keysLst.size(); i++) {
-            lst.add(initConnectionResponse(connectionResponse,valuesLst.get(i).getId(),
-                    ConnectionState.INVITATION,valuesLst.get(i)));
-           // lst.add(new ConnectionResponse(valuesLst.get(i).getInvitation().getId(),
-           //         keysLst.get(i).getData().getConnection_id(),valuesLst.get(i).getInvitation()));
-        }
-        setLst(lst);
-        return lst;
-    }
+
 }

@@ -1,4 +1,4 @@
-package Example160ProtocolRunner;
+package example_160protocol_runner;
 
 import com.sirius.sdk.encryption.P2PConnection;
 import com.sirius.sdk.hub.CloudContext;
