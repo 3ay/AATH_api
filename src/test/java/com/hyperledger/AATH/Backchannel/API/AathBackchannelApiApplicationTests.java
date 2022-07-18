@@ -1,9 +1,11 @@
 package com.hyperledger.AATH.Backchannel.API;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+
+
+import static org.junit.Assert.assertEquals;
 
 @SpringBootTest
 class AathBackchannelApiApplicationTests {
@@ -14,7 +16,7 @@ class AathBackchannelApiApplicationTests {
 	}
 	@Test
 	public void test() {
-		Assert.assertEquals(credentials_agent,"Ftp1Lx2Y9uVqM5Q1fzAgy3kngGMWqOsUGylPGc3oYD6a3o5vSxMHC4NKE8+f1HCdo3T+ZJEBZq50BaJy9rSGh18/iBQBSUoI8MAF402kYjQ=");
+		assertEquals(credentials_agent,"Ftp1Lx2Y9uVqM5Q1fzAgy3kngGMWqOsUGylPGc3oYD6a3o5vSxMHC4NKE8+f1HCdo3T+ZJEBZq50BaJy9rSGh18/iBQBSUoI8MAF402kYjQ=");
 	}
 
 }

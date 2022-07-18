@@ -17,29 +17,39 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class InvitationService {
     private final ConnectionService connectionService;
-    static Endpoint endpoint;
+    private Endpoint endpoint;
 
-    static Invitation invitation;
+    private Invitation invitation;
 
-    static String  connectionKey;
+    private String  connectionKey;
+    private String invitation_data;
+
+    private ArrayList<String> ConnectionKeysList;
+    public ArrayList<String> getConnectionKeysList() {
+        return ConnectionKeysList;
+    }
+
+    public void addToConnectionKeysList(String connectionKey) {
+        this.ConnectionKeysList.add(connectionKey);
+    }
 
     public InvitationService(ConnectionService connectionService) {
         this.connectionService = connectionService;
     }
 
     public String getConnectionKey() {
-        return connectionKey;
+        return this.connectionKey;
     }
 
     public void setConnectionKey(String connectionKey) {
-        InvitationService.connectionKey = connectionKey;
+        this.connectionKey = connectionKey;
     }
     public Invitation getInvitation() {
-        return invitation;
+        return this.invitation;
     }
 
     public Endpoint getEndpoint() {
-        return endpoint;
+        return this.endpoint;
     }
     public ConnectionCreateInvitationRequest invitationRequest(String id){
         ConnectionCreateInvitationRequest request = new ConnectionCreateInvitationRequest();
@@ -55,11 +65,11 @@ public class InvitationService {
                 setEndpoint(getEndpoint().getAddress()).
                 setRecipientKeys(Collections.singletonList(connectionKey)).
                 build();
-        setConnectionKey(connectionKey);
+       addToConnectionKeysList(connectionKey);
     }
     public boolean findRequest(ConnectionAcceptInvitationRequest request)
     {
-        ArrayList<InvitationMessage> values = new ArrayList<InvitationMessage>(getInvitationDic().values());
+        ArrayList<InvitationMessage> values = new ArrayList<InvitationMessage>(getInvitationRequestMessageDic().values());
         InvitationMessage response = values.stream()
                 .filter(el -> request.getId().equals(el.getId()))
                 .findAny()
@@ -112,23 +122,33 @@ public class InvitationService {
         return gson.fromJson(json, InvitationMessage.class);
     }
 
-    public static String getInvitation_data() {
-        return invitation_data;
+    public String getInvitation_data() {
+        return this.invitation_data;
     }
 
-    public static void setInvitation_data(String invitation_data) {
-        InvitationService.invitation_data = invitation_data;
+    public void setInvitation_data(String invitation_data) {
+        this.invitation_data = invitation_data;
     }
 
-    public ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> getInvitationDic() {
-        return invitationDic;
+    public ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> getInvitationRequestMessageDic() {
+        return invitationRequestMessageDic;
     }
 
-    public void setInvitationDic(ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationDic) {
-        InvitationService.invitationDic = invitationDic;
+    public void setInvitationRequestMessageDic(ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationDic) {
+        InvitationService.invitationRequestMessageDic = invitationDic;
     }
 
-    private static ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationDic = new ConcurrentHashMap();
+    private static ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> invitationRequestMessageDic = new ConcurrentHashMap();
+
+    public ConcurrentHashMap<String, Invitation> getInvitationIdInvitationDic() {
+        return invitationIdInvitationDic;
+    }
+
+    public void setInvitationIdInvitationDic(String id, Invitation invitation) {
+        this.invitationIdInvitationDic.put(id, invitation);
+    }
+
+    private ConcurrentHashMap<String, Invitation> invitationIdInvitationDic;
 
     public ConcurrentHashMap<ConnectionCreateInvitationRequest, Context> getContextDic() {
         return contextDic;
@@ -149,14 +169,14 @@ public class InvitationService {
     public ConnectionReceiveInvitation200Response getReceiveInvitationResponse(ConnectionReceiveInvitationRequest receiveInvitationRequest)
     {
         String connectionId = "";
-        ArrayList<InvitationMessage> values = new ArrayList<InvitationMessage>(getInvitationDic().values());
+        ArrayList<InvitationMessage> values = new ArrayList<InvitationMessage>(getInvitationRequestMessageDic().values());
         InvitationMessage response = values.stream()
                 .filter(el -> receiveInvitationRequest.getData().getMediatorConnectionId().equals(el.getId()))
                 .findAny()
                 .orElse(null);
         if (response != null) {
             connectionId = response.getId();
-            getInvitationDic().put(initCreateInvitationRequest(connectionId),
+            getInvitationRequestMessageDic().put(initCreateInvitationRequest(connectionId),
                     new InvitationMessage(
                     response.getType(),
                     response.getId(),
@@ -187,8 +207,25 @@ public class InvitationService {
         acceptInvitationResponse.setConnectionId(connectionId);
         return acceptInvitationResponse;
     }
+    public ConnectionAcceptRequest200Response initConnectionAcceptRequest(ConnectionAcceptInvitationRequest request)
+    {
+        ConnectionAcceptRequest200Response acceptInvitationRequest = new ConnectionAcceptRequest200Response();
+        String connectionId = "";
+        ConnectionResponse response = connectionService.getLst().stream()
+                .filter(el -> request.getId().equals(el.getConnectionId()))
+                .findAny()
+                .orElse(null);
+        if (response != null)
+            connectionId = response.getConnectionId();
+        else
+        {
+            throw new ThereIsNoInvitationException("There is no invitation has this id");
+        }
+        acceptInvitationRequest.setConnectionId(connectionId);
+        return acceptInvitationRequest;
+    }
 
-    public void addToInvitationDic(String id, Invitation invitation)
+    public void addToInvitationRequestMessageDic(String id, Invitation invitation)
     {
         ConcurrentHashMap<ConnectionCreateInvitationRequest, InvitationMessage> map =
                 new ConcurrentHashMap<>();
@@ -199,9 +236,10 @@ public class InvitationService {
                 object.serviceEndpoint,
                 object.recipientKeys,
                 object.label));
-        setInvitationDic(map);
+        setInvitationRequestMessageDic(map);
+        setInvitationIdInvitationDic(id, invitation);
     }
-    private static String invitation_data;
+
 
 
 }

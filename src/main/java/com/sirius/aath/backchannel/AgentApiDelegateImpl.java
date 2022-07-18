@@ -5,7 +5,10 @@ import com.sirius.aath.backchannel.exception.ThereIsNoInvitationException;
 import com.sirius.aath.backchannel.model.*;
 import com.sirius.aath.backchannel.services.ConnectionService;
 import com.sirius.aath.backchannel.services.InvitationService;
+import com.sirius.sdk.agent.aries_rfc.feature_0160_connection_protocol.state_machines.Invitee;
+import com.sirius.sdk.agent.connections.Endpoint;
 import com.sirius.sdk.agent.pairwise.Pairwise;
+import com.sirius.sdk.hub.Context;
 import com.sirius.sdk.utils.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -66,8 +69,9 @@ public class AgentApiDelegateImpl implements AgentApiDelegate {
             throw new RuntimeException(e);
         }
         invitationService.addToContextDic(request.getData().getMediatorConnectionId(), contextHolder.getContext());
-        invitationService.addToInvitationDic(request.getData().getMediatorConnectionId(), invitationService.getInvitation());
-        return ResponseEntity.ok(invitationService.invitation200Response(request.getData().getMediatorConnectionId(), invitationService.getInvitationDic().get(request)));
+        invitationService.addToInvitationRequestMessageDic(request.getData().getMediatorConnectionId(), invitationService.getInvitation());
+        invitationService.setEndpoint(contextHolder.getContext());
+        return ResponseEntity.ok(invitationService.invitation200Response(request.getData().getMediatorConnectionId(), invitationService.getInvitationRequestMessageDic().get(request)));
     }
 
     @Override
@@ -79,23 +83,26 @@ public class AgentApiDelegateImpl implements AgentApiDelegate {
     public ResponseEntity<ConnectionAcceptInvitation200Response> connectionAcceptInvitation(ConnectionAcceptInvitationRequest request) {
         if (invitationService.findRequest(request))
             throw new ThereIsNoInvitationException("There is no invitation has this id");
-        else {
-            Pair<String, String> didVerkey = contextHolder.getContext().getDid().createAndStoreMyDid();
-            Pairwise.Me inviterMe = new Pairwise.Me(didVerkey.first, didVerkey.second);
-            String expectedKey = invitationService.getConnectionKey();
-            // use inviter listener(expectedKey, inviterMe)
-
-        }
         return ResponseEntity.ok(invitationService.initConnectionAcceptResponse(request));//in second parameter may be ConnectionState.INVITATION
     }
 
-    public ResponseEntity<ConnectionAcceptRequest200Response> acceptRequest(ConnectionAcceptInvitationRequest request) {
-        return AgentApiDelegate.super.connectionAcceptRequest(request);
+
+    @Override
+    public ResponseEntity<ConnectionAcceptRequest200Response> connectionAcceptRequest(ConnectionAcceptInvitationRequest request) {
+        Context context = contextHolder.getContext();
+        Pair<String,String> didVerkey = context.getDid().createAndStoreMyDid();
+        Pairwise.Me inviteeMe = new Pairwise.Me(didVerkey.first, didVerkey.second);
+        Endpoint myEndpoint = context.getEndpointWithEmptyRoutingKeys();
+        Invitee machine = new Invitee(context, inviteeMe, myEndpoint);
+        String connectionId = request.getId();
+        Pairwise pairwise = machine.createConnection(invitationService.getInvitationIdInvitationDic().get(connectionId), "Invitee");
+        context.getPairwiseList().ensureExists(pairwise);
+        return ResponseEntity.ok(invitationService.initConnectionAcceptRequest(request));
     }
 
-    public ResponseEntity<ConnectionSendPingRequest> sendPing() {
-        ConnectionSendPingRequest rq = new ConnectionSendPingRequest();
-        return ResponseEntity.ok(rq);
+    @Override
+    public ResponseEntity<ConnectionAcceptRequest200Response> connectionSendPing(ConnectionSendPingRequest connectionSendPingRequest) {
+        return AgentApiDelegate.super.connectionSendPing(connectionSendPingRequest);
     }
 
 

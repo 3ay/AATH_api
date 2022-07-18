@@ -96,7 +96,7 @@ public class Main {
     final static String did_agent2 = "T8MtAB98aCkgNLtNfQx6WG";
     final static String seed_agent2 = "000000000000000000000000Trustee0";
     @PostConstruct
-    public static void init () throws InterruptedException, ExecutionException, TimeoutException {
+    public static void main () throws InterruptedException, ExecutionException, TimeoutException {
 
         try (Context context = CloudContext.builder().setServerUri(serverUrl)
                 .setCredentials(credentials_agent1)
