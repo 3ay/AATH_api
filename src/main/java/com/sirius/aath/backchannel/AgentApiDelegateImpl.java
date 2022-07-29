@@ -64,13 +64,21 @@ public class AgentApiDelegateImpl implements AgentApiDelegate {
     @Override
     public ResponseEntity<ConnectionCreateInvitation200Response> connectionCreateInvitation(ConnectionCreateInvitationRequest request){
         try {
-            invitationService.setInvitation(contextHolder.getContext());
+            invitationService.addToConnectionKeyInvitationDic(contextHolder.getContext());
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
-        invitationService.addToContextDic(request.getData().getMediatorConnectionId(), contextHolder.getContext());
-        invitationService.addToInvitationRequestMessageDic(request.getData().getMediatorConnectionId(), invitationService.getInvitation());
-        invitationService.setEndpoint(contextHolder.getContext());
+        //возможно connectionKey в request и сгенерённый connectionKey в addToConnectionKeyInvitationDic равны?
+        //если нет, то надо делать через сессии пользоватлей
+
+        try {
+            invitationService.addToInvitationRequestMessageDic(request.getData().getMediatorConnectionId(),
+                    invitationService.getConnectionKeyInvitationDic().values().stream().reduce((first, second) -> second).orElse(null));
+        }
+        catch (NullPointerException e)
+        {
+            throw new ThereIsNoInvitationException("Invitation does not exist");
+        }
         return ResponseEntity.ok(invitationService.invitation200Response(request.getData().getMediatorConnectionId(), invitationService.getInvitationRequestMessageDic().get(request)));
     }
 
@@ -83,7 +91,7 @@ public class AgentApiDelegateImpl implements AgentApiDelegate {
     public ResponseEntity<ConnectionAcceptInvitation200Response> connectionAcceptInvitation(ConnectionAcceptInvitationRequest request) {
         if (invitationService.findRequest(request))
             throw new ThereIsNoInvitationException("There is no invitation has this id");
-        return ResponseEntity.ok(invitationService.initConnectionAcceptResponse(request));//in second parameter may be ConnectionState.INVITATION
+        return ResponseEntity.ok(connectionService.initConnectionAcceptResponse(request));//in second parameter may be ConnectionState.INVITATION
     }
 
 
@@ -97,7 +105,7 @@ public class AgentApiDelegateImpl implements AgentApiDelegate {
         String connectionId = request.getId();
         Pairwise pairwise = machine.createConnection(invitationService.getInvitationIdInvitationDic().get(connectionId), "Invitee");
         context.getPairwiseList().ensureExists(pairwise);
-        return ResponseEntity.ok(invitationService.initConnectionAcceptRequest(request));
+        return ResponseEntity.ok(connectionService.initConnectionAcceptRequest(request));
     }
 
     @Override

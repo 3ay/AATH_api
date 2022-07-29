@@ -1,9 +1,7 @@
 package com.sirius.aath.backchannel.services;
 
-import com.sirius.aath.backchannel.model.ConnectionCreateInvitationRequest;
-import com.sirius.aath.backchannel.model.ConnectionResponse;
-import com.sirius.aath.backchannel.model.ConnectionState;
-import com.sirius.aath.backchannel.model.InvitationMessage;
+import com.sirius.aath.backchannel.exception.ThereIsNoInvitationException;
+import com.sirius.aath.backchannel.model.*;
 import com.sirius.sdk.agent.connections.Endpoint;
 import com.sirius.sdk.hub.Context;
 import org.springframework.stereotype.Service;
@@ -16,27 +14,6 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class ConnectionService {
     private final InvitationService invitationService;
-    private Endpoint endpoint;
-    private boolean connectionKeyIsExist;
-
-    public boolean isConnectionKeyIsExist() {
-        return connectionKeyIsExist;
-    }
-
-    public void setConnectionKeyIsExist(boolean connectionKeyIsExist) {
-        this.connectionKeyIsExist = connectionKeyIsExist;
-    }
-
-
-
-    public void setEndpoint(Context context) {
-        List<Endpoint> endpointList = context.getEndpoints();
-        endpointList.forEach((Endpoint e) ->
-        {
-            endpoint = e.getRoutingKeys().isEmpty() ? e : null;
-        });
-    }
-
     public ConnectionService(InvitationService invitationService) {
         this.invitationService = invitationService;
     }
@@ -64,5 +41,39 @@ public class ConnectionService {
         }
         setLst(lst);
         return lst;
+    }
+    public ConnectionAcceptInvitation200Response initConnectionAcceptResponse(ConnectionAcceptInvitationRequest request)
+    {
+        ConnectionAcceptInvitation200Response acceptInvitationResponse = new ConnectionAcceptInvitation200Response();
+        String connectionId = "";
+        ConnectionResponse response = getLst().stream()
+                .filter(el -> request.getId().equals(el.getConnectionId()))
+                .findAny()
+                .orElse(null);
+        if (response != null)
+            connectionId = response.getConnectionId();
+        else
+        {
+            throw new ThereIsNoInvitationException("There is no invitation has this id");
+        }
+        acceptInvitationResponse.setConnectionId(connectionId);
+        return acceptInvitationResponse;
+    }
+    public ConnectionAcceptRequest200Response initConnectionAcceptRequest(ConnectionAcceptInvitationRequest request)
+    {
+        ConnectionAcceptRequest200Response acceptInvitationRequest = new ConnectionAcceptRequest200Response();
+        String connectionId = "";
+        ConnectionResponse response = getLst().stream()
+                .filter(el -> request.getId().equals(el.getConnectionId()))
+                .findAny()
+                .orElse(null);
+        if (response != null)
+            connectionId = response.getConnectionId();
+        else
+        {
+            throw new ThereIsNoInvitationException("There is no invitation has this id");
+        }
+        acceptInvitationRequest.setConnectionId(connectionId);
+        return acceptInvitationRequest;
     }
 }

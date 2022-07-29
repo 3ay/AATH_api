@@ -69,13 +69,13 @@ public class SdkListener {
                 Message message = event.message();
                 String eventsConnectionKey = event.getRecipientVerkey();
                 log.info("received: {}", message.getMessageObj());
-                boolean connectionKeyIsExist = invitationService.getConnectionKeysList().contains(eventsConnectionKey);
-                connectionService.setConnectionKeyIsExist(connectionKeyIsExist);
+                boolean connectionKeyIsExist = invitationService.getConnectionKeyInvitationDic()
+                        .containsKey(eventsConnectionKey);
                 if (connectionKeyIsExist) {
                     if (message instanceof ConnRequest) {
                         ConnRequest request = (ConnRequest) event.message();
                         publisher.publishEvent(new ConnectionRequestEvent((ConnRequest) message, "metadata"));
-                        Inviter inviterMachine = new Inviter(context, inviterMe, eventsConnectionKey, invitationService.getEndpoint());
+                        Inviter inviterMachine = new Inviter(context, inviterMe, eventsConnectionKey, context.getEndpointWithEmptyRoutingKeys());
                         Pairwise pairwise = inviterMachine.createConnection(request);
                         context.getPairwiseList().ensureExists(pairwise);
                     }
